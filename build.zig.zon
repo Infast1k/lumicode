@@ -1,0 +1,11 @@
+.{
+    .name = .lumicode,
+    .version = "0.0.1",
+    .fingerprint = 0x2a2f732d201ab8dc,
+    .minimum_zig_version = "0.16.0",
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}
