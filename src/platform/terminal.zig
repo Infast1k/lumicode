@@ -2,23 +2,37 @@ const std = @import("std");
 const posix = std.posix;
 
 pub const Terminal = struct {
+    io: std.Io,
+    allocator: std.mem.Allocator,
+
     original: posix.termios,
     is_raw_mode_enabled: bool = false,
 
-    pub fn init() !Terminal {
-        const original = try posix.tcgetattr(posix.STDIN_FILENO);
+    stdin_buffer: [1024]u8 = undefined,
+    stdin_reader: std.Io.File.Reader = undefined,
 
-        var self = Terminal{
-            .original = original,
+    stdout_buffer: [1024]u8 = undefined,
+    stdout_writer: std.Io.File.Writer = undefined,
+
+    pub fn init(allocator: std.mem.Allocator, io: std.Io) !*Terminal {
+        const self = try allocator.create(Terminal);
+        errdefer allocator.destroy(self);
+
+        self.* = .{
+            .allocator = allocator,
+            .io = io,
+            .original = try posix.tcgetattr(posix.STDIN_FILENO),
+            .stdin_reader = std.Io.File.stdin().reader(io, &self.stdin_buffer),
+            .stdout_writer = std.Io.File.stdout().writer(io, &self.stdout_buffer),
         };
-
-        try self.enableRawMode();
 
         return self;
     }
 
     pub fn deinit(self: *Terminal) void {
+        self.flush() catch {};
         self.disableRawMode();
+        self.allocator.destroy(self);
     }
 
     pub fn enableRawMode(self: *Terminal) !void {
@@ -50,5 +64,20 @@ pub const Terminal = struct {
         if (!self.is_raw_mode_enabled) return;
         posix.tcsetattr(posix.STDIN_FILENO, .FLUSH, self.original) catch {};
         self.is_raw_mode_enabled = false;
+    }
+
+    pub fn readByte(self: *Terminal) !?u8 {
+        return self.stdin_reader.interface.takeByte() catch |err| switch (err) {
+            error.EndOfStream => null,
+            else => return err,
+        };
+    }
+
+    pub fn write(self: *Terminal, bytes: []const u8) !void {
+        try self.stdout_writer.interface.writeAll(bytes);
+    }
+
+    pub fn flush(self: *Terminal) !void {
+        try self.stdout_writer.interface.flush();
     }
 };
