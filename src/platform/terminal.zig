@@ -58,6 +58,7 @@ pub const Terminal = struct {
 
         try posix.tcsetattr(posix.STDIN_FILENO, .FLUSH, raw);
         self.is_raw_mode_enabled = true;
+        try self.clearWindow();
     }
 
     pub fn disableRawMode(self: *Terminal) void {
@@ -79,5 +80,10 @@ pub const Terminal = struct {
 
     pub fn flush(self: *Terminal) !void {
         try self.stdout_writer.interface.flush();
+    }
+
+    pub fn clearWindow(self: *Terminal) !void {
+        try self.write("\x1B[H\x1B[2J\x1B[3J");
+        try self.flush();
     }
 };
