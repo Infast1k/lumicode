@@ -1,6 +1,12 @@
 .{
     .name = .lumicode,
     .version = "0.0.1",
+    .dependencies = .{
+        .zsdl = .{
+            .url = "https://github.com/zig-gamedev/zsdl/archive/refs/heads/main.tar.gz",
+            .hash = "zsdl-0.4.0-dev-rFpjE7jpXwDwWl70ZndFkTAlOQgRLY4-wTxNtNtxYljF",
+        },
+    },
     .fingerprint = 0x2a2f732d201ab8dc,
     .minimum_zig_version = "0.16.0",
     .paths = .{
