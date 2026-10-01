@@ -19,6 +19,7 @@ pub const EditorState = struct {
     file_types: FileTypeRegistry,
 
     is_running: bool = true,
+    last_non_tree_buffer: ?*Buffer = null,
 
     pub fn init(gpa: std.mem.Allocator, io: std.Io) EditorState {
         return .{
@@ -69,4 +70,13 @@ pub const EditorState = struct {
             .types = &self.buffer_types,
         };
     }
+
+    pub fn findBufferOfType(self: *EditorState, type_id: BufferTypeId) ?*Buffer {
+        for (self.buffers.items) |buf| {
+            if (buf.type_id == type_id) return buf;
+        }
+
+        return null;
+    }
 };
+

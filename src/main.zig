@@ -76,6 +76,7 @@ pub fn main(init: std.process.Init) !void {
     try keymap.bind(.{ .kind = .char, .char = 's', .mods = .{ .ctrl = true } }, "text.save");
     try keymap.bind(.{ .kind = .char, .char = 'p', .mods = .{ .ctrl = true } }, "python.run");
     try keymap.bind(.{ .kind = .char, .char = 'e', .mods = .{ .ctrl = true } }, "sql.execute");
+    try keymap.bind(.{ .kind = .char, .char = 'b', .mods = .{ .ctrl = true } }, "app.toggle-tree");
 
     // --- Первый кадр ---
     if (state.current_buffer) |buf| {

@@ -23,6 +23,7 @@ fn openFileInNewBuffer(state: *EditorState, path: []const u8) !void {
     const name = std.fs.path.basename(path);
     const buf = try state.createBuffer(type_id, name, text_state, TextBuffer.destroy);
     state.setCurrentBuffer(buf);
+    state.last_non_tree_buffer = buf;
 
     std.log.info("[tree] opened {s} as '{s}'", .{
         path,

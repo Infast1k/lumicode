@@ -27,7 +27,7 @@ pub fn modsFromSdl(sdl_mod: u16) Modifier {
 pub fn keyFromKeyDown(k: sdl.KeyboardEvent) ?Key {
     const mods = modsFromSdl(k.keysym.mod);
 
-    const kind: KeyKind = switch (k.keysym.sym) {
+    const kind: ?KeyKind = switch (k.keysym.sym) {
         .up        => .arrow_up,
         .down      => .arrow_down,
         .left      => .arrow_left,
@@ -45,10 +45,26 @@ pub fn keyFromKeyDown(k: sdl.KeyboardEvent) ?Key {
         .f1  => .f1,  .f2  => .f2,  .f3  => .f3,  .f4  => .f4,
         .f5  => .f5,  .f6  => .f6,  .f7  => .f7,  .f8  => .f8,
         .f9  => .f9,  .f10 => .f10, .f11 => .f11, .f12 => .f12,
-        else => return null, // обычные символы приходят через text_input
+        else => null, // обычные символы приходят через text_input
     };
 
-    return Key{ .kind = kind, .mods = mods };
+    if (kind) |k_| {
+        return Key{ .kind = k_, .mods = mods };
+    }
+
+    // Обычные символы с Ctrl/Alt: SDL не присылвает для них text_input, поэтому возвращаем Key тут
+    if (mods.ctrl or mods.alt) {
+        const sym_signed: c_int = @intFromEnum(k.keysym.sym);
+        if (sym_signed >= 0x20 and sym_signed < 0x7f) {
+            return Key {
+                .kind = .char,
+                .char = @intCast(sym_signed),
+                .mods = mods,
+            };
+        }
+    }
+
+    return null;
 }
 
 /// Обычные печатаемые символы приходят как text_input (UTF-8).
