@@ -1,6 +1,8 @@
 const std = @import("std");
 const key_mod = @import("key.zig");
 const Registry = @import("../command/registry.zig").Registry;
+const BufferTypeRegistry = @import("../core/buffer_type.zig").BufferTypeRegistry;
+const CommandContext = @import("../command/registry.zig").CommandContext;
 
 pub const Key = key_mod.Key;
 
@@ -64,9 +66,13 @@ pub const Keymap = struct {
 
     /// Найти и выполнить команду.
     /// true - команда найдена и выполнена | false - клавиша не привязана.
-    pub fn dispatch(self: *Keymap, key: Key, registry: *Registry) !bool {
-        // FIXME: не нравится такое использование orelse
+    pub fn dispatch(
+        self: *Keymap,
+        key: Key,
+        registry: *Registry,
+        ctx: CommandContext,
+    ) !bool {
         const name = self.bindings.get(key) orelse return false;
-        return registry.execute(name);
+        return registry.execute(name, ctx);
     }
 };

@@ -35,6 +35,39 @@ pub const Terminal = struct {
         self.allocator.destroy(self);
     }
 
+    pub fn enterAltScreen(self: *Terminal) !void {
+        try self.write("\x1b[?1049h");
+    }
+
+    pub fn exitAltScreen(self: *Terminal) !void {
+        try self.write("\x1b[?1049l");
+    }
+
+    pub fn hideCursor(self: *Terminal) !void {
+        try self.write("\x1b[?25l");
+    }
+
+    pub fn showCursor(self: *Terminal) !void {
+        try self.write("\x1b[?25h");
+    }
+
+    pub const Size = struct {
+        rows: u16,
+        cols: u16,
+    };
+
+    pub fn size(self: *Terminal) Size {
+        _ = self;
+        var ws: posix.winsize = undefined;
+        const rc = posix.system.ioctl(
+            posix.STDOUT_FILENO,
+            posix.T.IOCGWINSZ,
+            @intFromPtr(&ws),
+        );
+        if (rc != 0) return .{ .rows = 24, .cols = 80 };
+        return .{ .rows = ws.row, .cols = ws.col };
+    }
+
     pub fn enableRawMode(self: *Terminal) !void {
         if (self.is_raw_mode_enabled) return;
 
