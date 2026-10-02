@@ -32,12 +32,12 @@ pub fn main(init: std.process.Init) !void {
     defer state.deinit();
 
     // Регистрация типов буферов
-    const tree_type   = try state.buffer_types.register(ProjectTree.TYPE_NAME, null);
-    const text_type   = try state.buffer_types.register(TextBuffer.TYPE_NAME, null);
+    const tree_type = try state.buffer_types.register(ProjectTree.TYPE_NAME, null);
+    const text_type = try state.buffer_types.register(TextBuffer.TYPE_NAME, null);
     const python_type = try state.buffer_types.register("python", text_type);
-    const sql_type    = try state.buffer_types.register("sql",    text_type);
+    const sql_type = try state.buffer_types.register("sql", text_type);
 
-    try state.file_types.registerExtension("py",  python_type);
+    try state.file_types.registerExtension("py", python_type);
     try state.file_types.registerExtension("sql", sql_type);
     try state.file_types.registerExtension("txt", text_type);
     state.file_types.setDefault(text_type);
@@ -67,16 +67,26 @@ pub fn main(init: std.process.Init) !void {
     defer keymap.deinit();
 
     try keymap.bind(.{ .kind = .char, .char = 'q', .mods = .{ .ctrl = true } }, "app.quit");
-    try keymap.bind(.{ .kind = .arrow_up },    "tree.up");
-    try keymap.bind(.{ .kind = .arrow_down },  "tree.down");
+    try keymap.bind(.{ .kind = .arrow_up }, "tree.up");
+    try keymap.bind(.{ .kind = .arrow_down }, "tree.down");
     try keymap.bind(.{ .kind = .arrow_right }, "tree.toggle");
-    try keymap.bind(.{ .kind = .arrow_left },  "tree.toggle");
-    try keymap.bind(.{ .kind = .enter },       "tree.enter");
+    try keymap.bind(.{ .kind = .arrow_left }, "tree.toggle");
+    try keymap.bind(.{ .kind = .enter }, "tree.enter");
     try keymap.bind(.{ .kind = .char, .char = 'r', .mods = .{ .ctrl = true } }, "tree.refresh");
     try keymap.bind(.{ .kind = .char, .char = 's', .mods = .{ .ctrl = true } }, "text.save");
     try keymap.bind(.{ .kind = .char, .char = 'p', .mods = .{ .ctrl = true } }, "python.run");
     try keymap.bind(.{ .kind = .char, .char = 'e', .mods = .{ .ctrl = true } }, "sql.execute");
     try keymap.bind(.{ .kind = .char, .char = 'b', .mods = .{ .ctrl = true } }, "app.toggle-tree");
+    try keymap.bind(.{ .kind = .page_up }, "text.page-up");
+    try keymap.bind(.{ .kind = .page_down }, "text.page-down");
+    try keymap.bind(
+        .{ .kind = .arrow_up, .mods = .{ .ctrl = true } },
+        "text.scroll-up",
+    );
+    try keymap.bind(
+        .{ .kind = .arrow_down, .mods = .{ .ctrl = true } },
+        "text.scroll-down",
+    );
 
     // --- Первый кадр ---
     if (state.current_buffer) |buf| {

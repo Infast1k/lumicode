@@ -6,6 +6,7 @@ const ProjectTree = @import("../buffers/project_tree.zig").ProjectTree;
 
 const LINE_HEIGHT: c_int = 22;
 const INDENT_STEP: c_int = 20;
+const PADDING_TOP: c_int = 8;
 
 pub fn render(state: *anyopaque, ctx: *SdlContext) !void {
     const tree: *ProjectTree = @ptrCast(@alignCast(state));
@@ -16,13 +17,28 @@ pub fn render(state: *anyopaque, ctx: *SdlContext) !void {
     const size = ctx.size();
     const vis = try tree.getVisible();
 
-    var y: c_int = 8;
-    for (vis, 0..) |entry, i| {
-        if (y > size.h - LINE_HEIGHT) break;
-        if (i < tree.scroll) continue;
+    // Сколько строк влезает в окно.
+    const viewport_rows: usize = @intCast(@divTrunc(
+        size.h - PADDING_TOP,
+        LINE_HEIGHT,
+    ));
+    if (viewport_rows == 0) {
+        ctx.renderer.present();
+        return;
+    }
 
+    // Подгоняем scroll так, чтобы selected был в окне.
+    tree.adjustScroll(viewport_rows);
+
+    // Рисуем ТОЛЬКО видимый диапазон.
+    const start = tree.scroll;
+    const end = @min(start + viewport_rows, vis.len);
+    const slice = vis[start..end];
+
+    for (slice, 0..) |entry, row| {
+        const y: c_int = PADDING_TOP + @as(c_int, @intCast(row)) * LINE_HEIGHT;
         const node = entry.node;
-        const is_selected = (i == tree.selected);
+        const is_selected = (start + row == tree.selected);
 
         if (is_selected) {
             try ctx.renderer.setDrawColor(.{ .r = 60, .g = 60, .b = 90, .a = 255 });
@@ -39,7 +55,6 @@ pub fn render(state: *anyopaque, ctx: *SdlContext) !void {
             (if (node.expanded) "▼ " else "▶ ")
         else
             "  ";
-
         const line = std.fmt.bufPrint(&line_buf, "{s}{s}", .{ prefix, node.name }) catch node.name;
 
         var text_buf: [512]u8 = undefined;
@@ -67,10 +82,7 @@ pub fn render(state: *anyopaque, ctx: *SdlContext) !void {
             .w = surface.w,
             .h = surface.h,
         };
-
         try ctx.renderer.copy(texture, null, &dst);
-
-        y += LINE_HEIGHT;
     }
 
     ctx.renderer.present();
